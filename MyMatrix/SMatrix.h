@@ -2,21 +2,17 @@
 
 #include<iostream>
 #include<string>
+#include<stdexcept>
 #include<algorithm>
 
 using Index = long;
 
 using namespace std;
 
-struct SMatrix_error
-{
-	string name;
-	SMatrix_error(const char* q) :name(q) { }
-	SMatrix_error(string n) :name(move(n)) { }
-	string what() { return name; }
+struct SMatrix_error : std::runtime_error{
+	SMatrix_error(const char* q) : std::runtime_error(q){}
+	SMatrix_error(string n) : std::runtime_error(n){}
 };
-
-inline void error(const char* p) { throw SMatrix_error(p); }
 
 template<typename T, const Index d1, const Index d2>
 class SMatrix
@@ -24,6 +20,14 @@ class SMatrix
 private:
 	T elem[d1][d2] = {};
 	const Index sz = d1 * d2;
+
+	constexpr void range_check(Index i, Index j) const
+	{
+		if (i < 0 || i >= d1)
+			throw SMatrix_error("range error: dimension 1");
+		if (j < 0 || j >= d2)
+			throw SMatrix_error("range error: dimension 2");
+	}
 
 public:
 	constexpr SMatrix() noexcept {}
@@ -40,18 +44,14 @@ public:
 
 		Index num = 0;
 		for (Index i = 0; i < d1; ++i)
-		{
 			for (Index j = 0; j < d2; ++j)
-			{
 				elem[i][j] = arr[num];
 				num++;
-			}
-		}
 	}
-	SMatrix(std::initializer_list<T> init_list)
+	constexpr SMatrix(std::initializer_list<T> init_list)
 	{
 		if (init_list.size() != this->sz)
-			error("Invalid argument for constructor SMatrix<T>::SMatrix(std::initializer_list<T>)");
+			throw SMatrix_error("Invalid argument for constructor SMatrix<T>::SMatrix(std::initializer_list<T>)");
 
 		auto initlstIt = init_list.begin();
 		for (Index i = 0; i < d1; ++i) 
@@ -64,31 +64,25 @@ public:
 		}
 	}
 	
-	SMatrix(const SMatrix& other)
+	constexpr SMatrix(const SMatrix& other)
 	{
-		std::copy(other.cbegin(), other.cend(), this->begin());
+		for (Index i = 0; i < d1; ++i)
+			for (Index j = 0; j < d2; ++j)
+				this->elem[i][j] = other.elem[i][j];
 	}
-	SMatrix& operator =(const SMatrix&) = default;
+	constexpr SMatrix& operator =(const SMatrix&) = default;
 
 	SMatrix(SMatrix&&) = delete;
 	SMatrix& operator =(SMatrix&&) = delete;
 
-	constexpr Index size_dim1() { return d1; }
-	constexpr Index size_dim2() { return d2; }
-	constexpr Index size() { return sz; }
+	constexpr inline Index size_dim1() const noexcept { return d1; }
+	constexpr inline Index size_dim2() const noexcept { return d2; }
+	constexpr inline Index size() const noexcept{ return sz; }
 
-	T* data() { return (T*)elem; }
-	const T* data() const { return (const T*)elem; }
+	inline T* data() noexcept { return (T*)elem; }
+	inline T const* data() const noexcept { return (T const*)elem; }
 
-	void range_check(Index i, Index j)
-	{
-		if (i < 0 || i >= d1)
-			error("range error: dimension 1");
-		if (j < 0 || j >= d2)
-			error("range error: dimension 2");
-	}
-
-	T const& operator ()(const Index i, const Index j) const
+	constexpr T const& operator ()(const Index i, const Index j) const
 	{
 		range_check(i, j);
 		return elem[i][j];
@@ -100,7 +94,7 @@ public:
 	}
 
 
-	T const* operator [](Index i) const { return elem[i]; }
+	constexpr T const* operator [](Index i) const { return elem[i]; }
 	T* operator [](Index i) { return elem[i]; }
 
 	void fill(const T& val)
@@ -144,9 +138,9 @@ public:
 	using iterator = T * ;
 	using const_iterator = T const*;
 
-	iterator begin() { return (T*)elem; }
-	iterator end() { return (T*)elem + sz; }
+	inline iterator begin() noexcept { return (T*)elem; }
+	inline iterator end() noexcept { return (T*)elem + sz; }
 
-	const_iterator cbegin() const { return (T const*)elem; }
-	const_iterator cend() const { return (T const*)elem + sz; }
+	inline const_iterator cbegin() const noexcept { return (T const*)elem; }
+	inline const_iterator cend() const noexcept { return (T const*)elem + sz; }
 };

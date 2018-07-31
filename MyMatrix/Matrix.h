@@ -9,14 +9,11 @@ using Index = long;
 
 using namespace std;
 
-struct Matrix_error {
+struct Matrix_error : std::runtime_error{
 	string name;
-	Matrix_error(const char* q) : name(q) {}
-	Matrix_error(string s) :name(s) {}
-	string what() { return name; }
+	Matrix_error(const char* q) : std::runtime_error(q){}
+	Matrix_error(string s) : std::runtime_error(s){}
 };
-
-inline void error(const char* p) { throw Matrix_error(p); }
 
 template<typename T>
 T Clamp(T& x, const T& lo, const T& hi)
@@ -44,7 +41,7 @@ public:
 	Matrix(const Index x, const Index y) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
 	{
 		if (dm1 <= 0 || dm2 <= 0)
-			error("Invalid argument for Matrix<T>::Matrix(const Index, const Index)");
+			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(const Index, const Index)");
 
 		data = new T*[dm1];
 
@@ -84,9 +81,9 @@ public:
 	void range_check(Index i, Index j)
 	{
 		if (i < 0 || i >= dm1)
-			error("range error: dimension 1");
+			throw Matrix_error("range error: dimension 1");
 		if (j < 0 || j >= dm2)
-			error("range error: dimension 2");
+			throw Matrix_error("range error: dimension 2");
 	}
 
 	T const& operator ()(const Index i, const Index j) const
@@ -141,7 +138,7 @@ public:
 		Clamp(n, (Index)0, dm1 - 1);
 		Clamp(m, (Index)0, dm1 - 1);
 
-		if (m <= n) error("wrong slice");
+		if (m <= n) throw Matrix_error("wrong slice");
 
 		const Index newsz = m - n + 1;
 		Matrix M(newsz, dm2);
@@ -158,7 +155,7 @@ public:
 		Clamp(n, (Index)0, dm1 - 1);
 		Clamp(m, (Index)0, dm1 - 1);
 
-		if (m <= n) error("wrong slice");
+		if (m <= n) throw Matrix_error("wrong slice");
 
 		const Index newsz = m - n + 1;
 		Matrix M(newsz, dm2);
@@ -177,7 +174,7 @@ public:
 		Clamp(n2, (Index)0, dm2 - 1);
 		Clamp(m2, (Index)0, dm2 - 1);
 
-		if (m1 <= n1 || m2 <= n2) error("wrong slice");
+		if (m1 <= n1 || m2 <= n2) throw Matrix_error("wrong slice");
 
 		const Index newsz_1 = m1 - n1 + 1;
 		const Index newsz_2 = m2 - n2 + 1;
@@ -197,7 +194,7 @@ public:
 		Clamp(n2, (Index)0, dm2 - 1);
 		Clamp(m2, (Index)0, dm2 - 1);
 
-		if (m1 <= n1 || m2 <= n2) error("wrong slice");
+		if (m1 <= n1 || m2 <= n2) throw Matrix_error("wrong slice");
 
 		const Index newsz_1 = m1 - n1 + 1;
 		const Index newsz_2 = m2 - n2 + 1;
@@ -291,7 +288,7 @@ public:
 	void add_d1(const T(&arr)[n])
 	{
 		if (n != dm2)
-			error("size of array is not equal to size of dimension1");
+			throw Matrix_error("size of array is not equal to size of dimension1");
 
 		if (space_d1 == 0)
 			reserve_d1(8);
@@ -376,7 +373,7 @@ public:
 	void add_d2(const T(&arr)[n])
 	{
 		if (n != dm1)
-			error("size of array is not equal to size of dimension2");
+			throw Matrix_error("size of array is not equal to size of dimension2");
 
 		if (space_d2 == 0)
 			reserve_d2(8);
@@ -394,7 +391,7 @@ public:
 	void del_d1(Index num)
 	{
 		if (num < 0 || num >= dm1)
-			error("Index is outside of Matrix");
+			throw Matrix_error("Index is outside of Matrix");
 
 		delete data[num];
 
@@ -410,7 +407,7 @@ public:
 	void del_d2(Index num)
 	{
 		if (num < 0 || num >= dm2)
-			error("Index is outside of Matrix");
+			throw Matrix_error("Index is outside of Matrix");
 
 		--dm2;
 
