@@ -2,7 +2,6 @@
 
 #include<iostream>
 #include<algorithm>
-#include<exception>
 #include<string>
 #include<initializer_list>
 
@@ -46,7 +45,6 @@ public:
 	{
 		if (dm1 <= 0 || dm2 <= 0)
 			error("Invalid argument for Matrix<T>::Matrix(const Index, const Index)");
-		//throw invalid_argument("Invalid argument for Matrix<T>::Matrix(const Index, const Index)");
 
 		data = new T*[dm1];
 
@@ -108,8 +106,6 @@ public:
 	// rows [n:dm1)
 	Matrix slice(Index n)
 	{
-		/*if (n < 0) n = 0;
-		else if (n >= dm1) n = dm1 - 1;*/
 		Clamp(n, (Index)0, dm1 - 1);
 
 		const Index newsz = dm1 - n;
@@ -126,8 +122,6 @@ public:
 	// rows [n:dm1)
 	const Matrix slice(Index n) const
 	{
-		/*if (n < 0) n = 0;
-		else if (n >= dm1) n = dm1 - 1;*/
 		Clamp(n, (Index)0, dm1 - 1);
 
 		const Index newsz = dm1 - n;
@@ -144,10 +138,6 @@ public:
 	//	rows [n:m)
 	Matrix slice(Index n, Index m)
 	{
-		/*if (n < 0) n = 0;
-		else if (n >= dm1) n = dm1 - 1;
-		if (m < 0) m = 0;
-		else if (m >= dm1) m = dm1 - 1;*/
 		Clamp(n, (Index)0, dm1 - 1);
 		Clamp(m, (Index)0, dm1 - 1);
 
@@ -165,10 +155,6 @@ public:
 	//	rows [n:m)
 	const Matrix slice(Index n, Index m) const
 	{
-		/*if (n < 0) n = 0;
-		else if (n >= dm1) n = dm1 - 1;
-		if (m < 0) m = 0;
-		else if (m >= dm1) m = dm1 - 1;*/
 		Clamp(n, (Index)0, dm1 - 1);
 		Clamp(m, (Index)0, dm1 - 1);
 
