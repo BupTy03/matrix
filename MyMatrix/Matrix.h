@@ -84,9 +84,9 @@ public:
 	void range_check(Index i, Index j)
 	{
 		if (i < 0 || i >= dm1)
-			error("range error: dimention 1");
+			error("range error: dimension 1");
 		if (j < 0 || j >= dm2)
-			error("range error: dimention 2");
+			error("range error: dimension 2");
 	}
 
 	T const& operator ()(const Index i, const Index j) const
@@ -291,7 +291,7 @@ public:
 	void add_d1(const T(&arr)[n])
 	{
 		if (n != dm2)
-			error("size of array is not equal to size of dimention1");
+			error("size of array is not equal to size of dimension1");
 
 		if (space_d1 == 0)
 			reserve_d1(8);
@@ -376,7 +376,7 @@ public:
 	void add_d2(const T(&arr)[n])
 	{
 		if (n != dm1)
-			error("size of array is not equal to size of dimention2");
+			error("size of array is not equal to size of dimension2");
 
 		if (space_d2 == 0)
 			reserve_d2(8);
