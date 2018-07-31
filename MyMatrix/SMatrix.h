@@ -83,9 +83,9 @@ public:
 	void range_check(Index i, Index j)
 	{
 		if (i < 0 || i >= d1)
-			error("range error: dimention 1");
+			error("range error: dimension 1");
 		if (j < 0 || j >= d2)
-			error("range error: dimention 2");
+			error("range error: dimension 2");
 	}
 
 	T const& operator ()(const Index i, const Index j) const
