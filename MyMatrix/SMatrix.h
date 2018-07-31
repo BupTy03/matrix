@@ -48,7 +48,7 @@ public:
 			}
 		}
 	}
-	SMatrix(const std::initializer_list<T> init_list)
+	SMatrix(std::initializer_list<T> init_list)
 	{
 		if (init_list.size() != this->sz)
 			error("Invalid argument for constructor SMatrix<T>::SMatrix(std::initializer_list<T>)");
@@ -73,9 +73,9 @@ public:
 	SMatrix(SMatrix&&) = delete;
 	SMatrix& operator =(SMatrix&&) = delete;
 
-	constexpr Index size_dim1() const { return d1; }
-	constexpr Index size_dim2() const { return d2; }
-	constexpr Index size() const { return sz; }
+	constexpr Index size_dim1() { return d1; }
+	constexpr Index size_dim2() { return d2; }
+	constexpr Index size() { return sz; }
 
 	T* data() { return (T*)elem; }
 	const T* data() const { return (const T*)elem; }
