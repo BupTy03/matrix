@@ -43,12 +43,19 @@ private:
 	}
 
 public:
-	Matrix(Index x = 1, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
+	Matrix(Index x = 0, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
 	{
-		if (dm1 <= 0 || dm2 < 0)
+		if (dm1 < 0 || dm2 < 0)
 			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(Index, Index)");
 
+		if(dm1 == 0){
+			data = nullptr;
+			return;
+		}
+
 		data = new T*[dm1];
+
+		if(dm2 == 0) return;
 
 		for (Index i = 0; i < dm1; ++i)
 			data[i] = new T[dm2]();
@@ -260,10 +267,10 @@ public:
 		sz = dm1 * dm2;
 	}
 
-	void add_d1(const T& val)
+	bool add_d1(const T& val)
 	{
 		if(dm2 == 0)
-			throw Matrix_error("size of dimension2 = 0 - nothing to fill");
+			return false;
 
 		Index old_dm1 = dm1;
 
@@ -271,15 +278,14 @@ public:
 
 		for (Index i = 0; i < dm2; i++)
 			data[old_dm1][i] = val;
+
+		return true;
 	}
 	template<typename Iter>
-	void add_d1(Iter first, Iter last)
+	bool add_d1(Iter first, Iter last)
 	{
-		if(dm2 == 0)
-			throw Matrix_error("size of dimension2 = 0 - nothing to fill");
-
-		if (std::distance(first, last) != dm2)
-			return;
+		if(dm2 == 0 || std::distance(first, last) != dm2)
+			return false;
 
 		Index old_dm1 = dm1;
 
@@ -290,19 +296,14 @@ public:
 			data[old_dm1][i] = *first;
 			first++;
 		}
+
+		return true;
 	}
-	template<int n>
-	void add_d1(const T(&arr)[n])
+
+	template<class Container>
+	bool add_d1(const Container& cont)
 	{
-		if (n != dm2)
-			throw Matrix_error("size of array is not equal to size of dimension1");
-
-		Index old_dm1 = dm1;
-
-		add_d1();
-
-		for (Index i = 0; i < n; ++i)
-			data[old_dm1][i] = arr[i];
+		return add_d1(std::begin(cont), std::end(cont));
 	}
 
 	void reserve_d2(Index newalloc)
@@ -352,20 +353,25 @@ public:
 		sz = dm1 * dm2;
 	}
 
-	void add_d2(const T& val)
+	bool add_d2(const T& val)
 	{
+		if(dm1 == 0)
+			return false;
+
 		Index old_dm2 = dm2;
 
 		add_d2();
 
 		for (Index i = 0; i < dm1; i++)
 			data[i][old_dm2] = val;
+
+		return true;
 	}
 	template<typename Iter>
-	void add_d2(Iter first, Iter last)
+	bool add_d2(Iter first, Iter last)
 	{
-		if (std::distance(first, last) != dm1)
-			return;
+		if(dm1 == 0 || std::distance(first, last) != dm1)
+			return false;
 
 		Index old_dm2 = dm2;
 
@@ -376,19 +382,14 @@ public:
 			data[i][old_dm2] = *first;
 			first++;
 		}
+
+		return true;
 	}
-	template<int n>
-	void add_d2(const T(&arr)[n])
+
+	template<class Container>
+	bool add_d2(const Container& cont)
 	{
-		if (n != dm1)
-			throw Matrix_error("size of array is not equal to size of dimension2");
-
-		Index old_dm2 = dm2;
-
-		add_d2();
-
-		for (Index i = 0; i < n; ++i)
-			data[i][old_dm2] = arr[i];
+		return add_d2(std::begin(cont), std::end(cont));
 	}
 
 	void del_d1() { del_d1(dm1 - 1); }

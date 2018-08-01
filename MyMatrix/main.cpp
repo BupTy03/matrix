@@ -1,4 +1,5 @@
 #include<iostream>
+#include <vector>
 //#include"SMatrix.h"
 #include"Matrix.h"
 
@@ -29,16 +30,39 @@ int main()
 	// 	cout << e.what() << endl;
 	// }
 
-	Matrix<int> mtx;
-	mtx.add_d1();
+	// Matrix<int> mtx;
+
+	// mtx.add_d1();
+	// cout << mtx << endl;
+	// mtx.add_d2(3);
+	// cout << mtx << endl;
+	// mtx.add_d2(4);
+	// cout << mtx << endl;
+	// mtx.add_d2(5);
+	// cout << mtx << endl;
+	// mtx.add_d1(6);
+	// cout << mtx << endl;
+
+	int arr[3] = { 1, 2, 3 };
+
+	Matrix<int> mtx(2, 3);
+
 	cout << mtx << endl;
-	mtx.add_d2(3);
+
+	cout << std::boolalpha;
+
+	cout << mtx.add_d1(arr) << endl;
+
 	cout << mtx << endl;
-	mtx.add_d2(4);
+
+	cout << mtx.add_d2(arr) << endl;
+
 	cout << mtx << endl;
-	mtx.add_d2(5);
-	cout << mtx << endl;
-	mtx.add_d1(6);
+
+	std::vector<int> v(mtx.size_dim2(), 1);
+
+	cout << mtx.add_d1(v) << endl;
+
 	cout << mtx << endl;
 
 	return 0;
