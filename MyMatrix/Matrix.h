@@ -1,9 +1,7 @@
 #pragma once
 
 #include<iostream>
-#include<algorithm>
 #include<string>
-#include<initializer_list>
 
 using Index = long;
 
@@ -36,16 +34,23 @@ private:
 	Index space_d1;
 	Index space_d2;
 
-public:
-	Matrix() noexcept : data(nullptr), dm1(0), dm2(0), sz(0), space_d1(0), space_d2(0) {}
-	Matrix(const Index x, const Index y) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
+	void range_check(Index i, Index j)
 	{
-		if (dm1 <= 0 || dm2 <= 0)
-			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(const Index, const Index)");
+		if (i < 0 || i >= dm1)
+			throw Matrix_error("range error: dimension 1");
+		if (j < 0 || j >= dm2)
+			throw Matrix_error("range error: dimension 2");
+	}
+
+public:
+	Matrix(Index x = 0, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
+	{
+		if (dm1 < 0 || dm2 < 0)
+			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(Index, Index)");
 
 		data = new T*[dm1];
 
-		for (Index i = 0; i < dm1; i++)
+		for (Index i = 0; i < dm1; ++i)
 			data[i] = new T[dm2]();
 
 	}
@@ -55,13 +60,19 @@ public:
 			for (Index j = 0; j < dm2; j++)
 				data[i][j] = val;
 	}
+
 	Matrix(const Matrix& other) : dm1(other.dm1), dm2(other.dm2), sz(other.sz), space_d1(other.space_d1), space_d2(other.space_d2)
 	{
+		data = new T*[space_d1];
+
+		for (Index i = 0; i < dm1; ++i)
+			data[i] = new T[space_d2]();
+
 		for (Index i = 0; i < dm1; ++i)
 			for (Index j = 0; j < dm2; ++j)
 				data[i][j] = other.data[i][j];
 	}
-	Matrix(Matrix&& other) : Matrix()
+	Matrix(Matrix&& other) noexcept : data(nullptr), dm1(0), dm2(0), sz(0), space_d1(0), space_d2(0)
 	{
 		swap(data, other.data);
 		swap(dm1, other.dm1);
@@ -72,19 +83,11 @@ public:
 	}
 
 	Matrix& operator=(const Matrix&) = default;
-	Matrix& operator =(Matrix&&) = default;
+	Matrix& operator =(Matrix&&) noexcept = default;
 
 	Index size_dim1() const noexcept { return dm1; }
 	Index size_dim2() const noexcept { return dm2; }
 	Index size() const noexcept { return sz; }
-
-	void range_check(Index i, Index j)
-	{
-		if (i < 0 || i >= dm1)
-			throw Matrix_error("range error: dimension 1");
-		if (j < 0 || j >= dm2)
-			throw Matrix_error("range error: dimension 2");
-	}
 
 	T const& operator ()(const Index i, const Index j) const
 	{
@@ -97,46 +100,42 @@ public:
 		return data[i][j];
 	}
 
-	T const* operator [](Index i) const { return data[i]; }
-	T* operator [](Index i) { return data[i]; }
+	T const* operator [](Index i) const noexcept { return data[i]; }
+	T* operator [](Index i) noexcept { return data[i]; }
 
 	// rows [n:dm1)
 	Matrix slice(Index n)
 	{
-		Clamp(n, (Index)0, dm1 - 1);
+		Clamp(n, static_cast<Index>(0), dm1 - 1);
 
 		const Index newsz = dm1 - n;
 		Matrix M(newsz, dm2);
+
 		for (Index i = 0, k = n; i < newsz; ++i, ++k)
-		{
 			for (Index j = 0; j < dm2; ++j)
-			{
 				M[i][j] = this->data[k][j];
-			}
-		}
+
 		return M;
 	}
 	// rows [n:dm1)
 	const Matrix slice(Index n) const
 	{
-		Clamp(n, (Index)0, dm1 - 1);
+		Clamp(n, static_cast<Index>(0), dm1 - 1);
 
 		const Index newsz = dm1 - n;
 		Matrix M(newsz, dm2);
+
 		for (Index i = 0, k = n; i < newsz; ++i, ++k)
-		{
 			for (Index j = 0; j < dm2; ++j)
-			{
 				M[i][j] = this->data[k][j];
-			}
-		}
+
 		return M;
 	}
 	//	rows [n:m)
 	Matrix slice(Index n, Index m)
 	{
-		Clamp(n, (Index)0, dm1 - 1);
-		Clamp(m, (Index)0, dm1 - 1);
+		Clamp(n, static_cast<Index>(0), dm1 - 1);
+		Clamp(m, static_cast<Index>(0), dm1 - 1);
 
 		if (m <= n) throw Matrix_error("wrong slice");
 
@@ -152,8 +151,8 @@ public:
 	//	rows [n:m)
 	const Matrix slice(Index n, Index m) const
 	{
-		Clamp(n, (Index)0, dm1 - 1);
-		Clamp(m, (Index)0, dm1 - 1);
+		Clamp(n, static_cast<Index>(0), dm1 - 1);
+		Clamp(m, static_cast<Index>(0), dm1 - 1);
 
 		if (m <= n) throw Matrix_error("wrong slice");
 
@@ -169,10 +168,10 @@ public:
 	// rows and colls [n1:m1) and [n2:m2)
 	Matrix slice(Index n1, Index n2, Index m1, Index m2)
 	{
-		Clamp(n1, (Index)0, dm1 - 1);
-		Clamp(m1, (Index)0, dm1 - 1);
-		Clamp(n2, (Index)0, dm2 - 1);
-		Clamp(m2, (Index)0, dm2 - 1);
+		Clamp(n1, static_cast<Index>(0), dm1 - 1);
+		Clamp(m1, static_cast<Index>(0), dm1 - 1);
+		Clamp(n2, static_cast<Index>(0), dm2 - 1);
+		Clamp(m2, static_cast<Index>(0), dm2 - 1);
 
 		if (m1 <= n1 || m2 <= n2) throw Matrix_error("wrong slice");
 
@@ -189,10 +188,10 @@ public:
 	// rows and colls [n1:m1) and [n2:m2)
 	const Matrix slice(Index n1, Index n2, Index m1, Index m2) const
 	{
-		Clamp(n1, (Index)0, dm1 - 1);
-		Clamp(m1, (Index)0, dm1 - 1);
-		Clamp(n2, (Index)0, dm2 - 1);
-		Clamp(m2, (Index)0, dm2 - 1);
+		Clamp(n1, static_cast<Index>(0), dm1 - 1);
+		Clamp(m1, static_cast<Index>(0), dm1 - 1);
+		Clamp(n2, static_cast<Index>(0), dm2 - 1);
+		Clamp(m2, static_cast<Index>(0), dm2 - 1);
 
 		if (m1 <= n1 || m2 <= n2) throw Matrix_error("wrong slice");
 
