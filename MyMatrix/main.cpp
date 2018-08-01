@@ -30,9 +30,15 @@ int main()
 	// }
 
 	Matrix<int> mtx;
+	mtx.add_d1();
+	cout << mtx << endl;
 	mtx.add_d2(3);
-	mtx.add_d1(5);
-
+	cout << mtx << endl;
+	mtx.add_d2(4);
+	cout << mtx << endl;
+	mtx.add_d2(5);
+	cout << mtx << endl;
+	mtx.add_d1(6);
 	cout << mtx << endl;
 
 	return 0;

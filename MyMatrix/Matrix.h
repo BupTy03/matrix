@@ -43,9 +43,9 @@ private:
 	}
 
 public:
-	Matrix(Index x = 0, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
+	Matrix(Index x = 1, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
 	{
-		if (dm1 < 0 || dm2 < 0)
+		if (dm1 <= 0 || dm2 < 0)
 			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(Index, Index)");
 
 		data = new T*[dm1];
@@ -246,42 +246,50 @@ public:
 		dm1 = newsize;
 		sz = dm1 * dm2;
 	}
-	void add_d1(const T& val)
+
+	void add_d1()
 	{
 		if (space_d1 == 0)
 			reserve_d1(8);
 		else if (dm1 == space_d1)
 			reserve_d1(2 * space_d1);
 
-		data[dm1] = new T[space_d2];
-
-		for (Index i = 0; i < dm2; i++)
-			data[dm1][i] = val;
+		data[dm1] = new T[space_d2]();
 
 		++dm1;
 		sz = dm1 * dm2;
 	}
+
+	void add_d1(const T& val)
+	{
+		if(dm2 == 0)
+			throw Matrix_error("size of dimension2 = 0 - nothing to fill");
+
+		Index old_dm1 = dm1;
+
+		add_d1();
+
+		for (Index i = 0; i < dm2; i++)
+			data[old_dm1][i] = val;
+	}
 	template<typename Iter>
 	void add_d1(Iter first, Iter last)
 	{
+		if(dm2 == 0)
+			throw Matrix_error("size of dimension2 = 0 - nothing to fill");
+
 		if (std::distance(first, last) != dm2)
 			return;
 
-		if (space_d1 == 0)
-			reserve_d1(8);
-		else if (dm1 == space_d1)
-			reserve_d1(2 * space_d1);
+		Index old_dm1 = dm1;
 
-		data[dm1] = new T[space_d2];
+		add_d1();
 
 		for (Index i = 0; i < dm2; i++)
 		{
-			data[dm1][i] = *first;
+			data[old_dm1][i] = *first;
 			first++;
 		}
-
-		++dm1;
-		sz = dm1 * dm2;
 	}
 	template<int n>
 	void add_d1(const T(&arr)[n])
@@ -289,18 +297,12 @@ public:
 		if (n != dm2)
 			throw Matrix_error("size of array is not equal to size of dimension1");
 
-		if (space_d1 == 0)
-			reserve_d1(8);
-		else if (dm1 == space_d1)
-			reserve_d1(2 * space_d1);
+		Index old_dm1 = dm1;
 
-		data[dm1] = new T[space_d2];
+		add_d1();
 
 		for (Index i = 0; i < n; ++i)
-			data[dm1][i] = arr[i];
-
-		++dm1;
-		sz = dm1 * dm2;
+			data[old_dm1][i] = arr[i];
 	}
 
 	void reserve_d2(Index newalloc)
@@ -335,7 +337,8 @@ public:
 		dm2 = newsize;
 		sz = dm1 * dm2;
 	}
-	void add_d2(const T& val)
+
+	void add_d2()
 	{
 		if (space_d2 == 0)
 			reserve_d2(8);
@@ -343,10 +346,20 @@ public:
 			reserve_d2(2 * space_d2);
 
 		for (Index i = 0; i < dm1; i++)
-			data[i][dm2] = val;
+			data[i][dm2] = {};
 
 		++dm2;
 		sz = dm1 * dm2;
+	}
+
+	void add_d2(const T& val)
+	{
+		Index old_dm2 = dm2;
+
+		add_d2();
+
+		for (Index i = 0; i < dm1; i++)
+			data[i][old_dm2] = val;
 	}
 	template<typename Iter>
 	void add_d2(Iter first, Iter last)
@@ -354,19 +367,15 @@ public:
 		if (std::distance(first, last) != dm1)
 			return;
 
-		if (space_d2 == 0)
-			reserve_d2(8);
-		else if (dm2 == space_d2)
-			reserve_d2(2 * space_d2);
+		Index old_dm2 = dm2;
+
+		add_d2();
 
 		for (Index i = 0; i < dm1; ++i)
 		{
-			data[i][dm2] = *first;
+			data[i][old_dm2] = *first;
 			first++;
 		}
-
-		++dm2;
-		sz = dm1 * dm2;
 	}
 	template<int n>
 	void add_d2(const T(&arr)[n])
@@ -374,16 +383,12 @@ public:
 		if (n != dm1)
 			throw Matrix_error("size of array is not equal to size of dimension2");
 
-		if (space_d2 == 0)
-			reserve_d2(8);
-		else if (dm2 == space_d2)
-			reserve_d2(2 * space_d2);
+		Index old_dm2 = dm2;
+
+		add_d2();
 
 		for (Index i = 0; i < n; ++i)
-			data[i][dm2] = arr[i];
-
-		++dm2;
-		sz = dm1 * dm2;
+			data[i][old_dm2] = arr[i];
 	}
 
 	void del_d1() { del_d1(dm1 - 1); }
