@@ -42,8 +42,14 @@ private:
 			throw Matrix_error("range error: dimension 2");
 	}
 
+	void range_check(Index x, Index min, Index max)
+	{
+		if (x < min || x > max)
+			throw Matrix_error("range error");
+	}
+
 public:
-	Matrix(Index x = 0, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
+	explicit Matrix(Index x = 0, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
 	{
 		if (dm1 < 0 || dm2 < 0)
 			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(Index, Index)");
@@ -61,11 +67,29 @@ public:
 			data[i] = new T[dm2]();
 
 	}
-	Matrix(const Index x, const Index y, const T& val) : Matrix(x, y)
+	explicit Matrix(const Index x, const Index y, const T& val) : Matrix(x, y)
 	{
 		for (Index i = 0; i < dm1; i++)
 			for (Index j = 0; j < dm2; j++)
 				data[i][j] = val;
+	}
+
+	template<class Container>
+	explicit Matrix(const Index x, const Index y, const Container& cont) :  Matrix(x, y)
+	{
+		if(std::size(cont) != sz)
+			throw Matrix_error("size of Container is not equal to size of Matrix");
+
+		auto first = std::begin(cont);
+
+		for(Index i = 0; i < dm1; ++i)
+		{
+			for(Index j = 0; j < dm2; ++j)
+			{
+				data[i][j] = *first;
+				first++;
+			}
+		}
 	}
 
 	Matrix(const Matrix& other) : dm1(other.dm1), dm2(other.dm2), sz(other.sz), space_d1(other.space_d1), space_d2(other.space_d2)
@@ -215,9 +239,59 @@ public:
 
 	void fill(const T& val)
 	{
-		for (Index i = 0; i < dm1; i++)
-			for (Index j = 0; j < dm2; j++)
+		for (Index i = 0; i < dm1; ++i)
+			for (Index j = 0; j < dm2; ++j)
 				data[i][j] = val;
+	}
+
+	void fill_row(Index i, const T& val)
+	{
+		range_check(i, 0, dm1 - 1);
+
+		for (Index j = 0; j < dm2; ++j)
+			data[i][j] = val;
+	}
+
+	template<class Container>
+	void fill_row(Index i, const Container& cont)
+	{
+		range_check(i, 0, dm1 - 1);
+
+		if(std::size(cont) != dm2)
+			throw Matrix_error("size of Container is not equal to size of this row");
+
+		auto first = std::begin(cont);
+
+		for(Index j = 0; j < dm2; ++j)
+		{
+			data[i][j] = *first;
+			first++;
+		}
+	}
+
+	void fill_col(Index j, const T& val)
+	{
+		range_check(j, 0, dm2 - 1);
+
+		for (Index i = 0; i < dm1; ++i)
+			data[i][j] = val;
+	}
+
+	template<class Container>
+	void fill_col(Index j, const Container& cont)
+	{
+		range_check(j, 0, dm2 - 1);
+
+		if(std::size(cont) != dm1)
+			throw Matrix_error("size of Container is not equal to size of this col");
+
+		auto first = std::begin(cont);
+
+		for(Index i = 0; i < dm1; ++i)
+		{
+			data[i][j] = *first;
+			first++;
+		}
 	}
 
 	template<typename F, typename... Args>
@@ -226,6 +300,24 @@ public:
 		for (Index i = 0; i < dm1; i++)
 			for (Index j = 0; j < dm2; j++)
 				data[i][j] = func(data[i][j], std::forward<Args>(args)...);
+	}
+
+	template<typename F, typename... Args>
+	void apply_to_row(Index i, F func, Args&&... args)
+	{
+		range_check(i, 0, dm1 - 1);
+
+		for (Index j = 0; j < dm2; ++j)
+			data[i][j] = func(data[i][j], std::forward<Args>(args)...);
+	}
+
+	template<typename F, typename... Args>
+	void apply_to_col(Index j, F func, Args&&... args)
+	{
+		range_check(j, 0, dm2 - 1);
+
+		for (Index i = 0; i < dm1; ++i)
+			data[i][j] = func(data[i][j], std::forward<Args>(args)...);
 	}
 
 	void reserve_d1(Index newalloc)
@@ -281,11 +373,14 @@ public:
 
 		return true;
 	}
-	template<typename Iter>
-	bool add_d1(Iter first, Iter last)
+
+	template<class Container>
+	bool add_d1(const Container& cont)
 	{
-		if(dm2 == 0 || std::distance(first, last) != dm2)
+		if(dm2 == 0 || std::size(cont) != dm2)
 			return false;
+
+		auto first 	= std::begin(cont);
 
 		Index old_dm1 = dm1;
 
@@ -298,12 +393,6 @@ public:
 		}
 
 		return true;
-	}
-
-	template<class Container>
-	bool add_d1(const Container& cont)
-	{
-		return add_d1(std::begin(cont), std::end(cont));
 	}
 
 	void reserve_d2(Index newalloc)
@@ -367,11 +456,14 @@ public:
 
 		return true;
 	}
-	template<typename Iter>
-	bool add_d2(Iter first, Iter last)
+
+	template<class Container>
+	bool add_d2(const Container& cont)
 	{
-		if(dm1 == 0 || std::distance(first, last) != dm1)
+		if(dm1 == 0 || std::size(cont) != dm1)
 			return false;
+
+		auto first = std::begin(cont);
 
 		Index old_dm2 = dm2;
 
@@ -384,12 +476,6 @@ public:
 		}
 
 		return true;
-	}
-
-	template<class Container>
-	bool add_d2(const Container& cont)
-	{
-		return add_d2(std::begin(cont), std::end(cont));
 	}
 
 	void del_d1() { del_d1(dm1 - 1); }

@@ -65,5 +65,11 @@ int main()
 
 	cout << mtx << endl;
 
+	int arr2[6] = { 1, 2, 3, 4, 5, 6 };
+
+	Matrix<int> mtx2{2, 3, arr2};
+
+	cout << mtx2 << endl;
+
 	return 0;
 }
