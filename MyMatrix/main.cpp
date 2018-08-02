@@ -71,5 +71,13 @@ int main()
 
 	cout << mtx2 << endl;
 
+	mtx2.apply_to_row(1, [](auto& x){ return x*x; });
+
+	cout << mtx2 << endl;
+
+	mtx2.fill_row(0, 0);
+
+	cout << mtx2 << endl;
+
 	return 0;
 }
