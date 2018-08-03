@@ -88,7 +88,9 @@ int main()
 	//cout << mtx << endl;
 
 	//Matrix<int> mtx2(10, 10);
-	Matrix<int> mtx2 = mtx;
+	Matrix<int> mtx2(0, 7);
+
+	mtx2 = mtx;
 
 	cout << mtx2 << endl;
 

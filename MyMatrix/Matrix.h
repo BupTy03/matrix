@@ -93,40 +93,9 @@ public:
 		}
 	}
 
-	Matrix(const Matrix& other)
+	Matrix(const Matrix& other) : dm1(other.dm1), dm2(other.dm2), sz(other.sz)
 	{
-		if(dm1 != 0)
-		{
-			if(space_d1 >= other.dm1 && space_d2 >= other.dm2)
-			{
-				dm1 = other.dm1;
-				dm2 = other.dm2;
-				sz = other.sz;
-
-				for(Index i = 0; i < dm1; ++i)
-					for(Index j = 0; j < dm2; ++j)
-						data[i][j] = other.data[i][j];
-
-				space_d1 -= dm1;
-				space_d2 -= dm2;
-				return;
-			}
-			else{
-
-				if(dm2 != 0){
-					for(Index i = 0; i < dm1; ++i)
-						delete[] data[i];
-				}
-
-				delete[] data;
-			}
-		}
-
 		cout << "Выделение памяти при помощи new в конструкторе копирования" << endl;
-
-		dm1 = other.dm1;
-		dm2 = other.dm2;
-		sz = other.sz;
 
 		data = new T*[dm1];
 
@@ -142,20 +111,48 @@ public:
 
 	Matrix& operator=(const Matrix& other)
 	{
+		if(this == &other)
+			return *this;
+
+		if(other.dm1 == 0)
+		{
+			this->dm2 = other.dm2;
+			return *this;
+		}
+
 		if(dm1 != 0)
 		{
-			if(space_d1 >= dm1 && space_d2 >= dm2)
+			if(space_d1 >= other.dm1)
 			{
+				space_d1 -= other.dm1;
+
+				if(dm2 != 0)
+				{
+					if(space_d2 >= other.dm2){
+						space_d2 -= other.dm2;
+					}
+					else{
+						for(Index i = 0; i < dm1; ++i)
+							delete[] data[i];
+
+						for(Index i = 0; i < other.dm1; ++i)
+							data[i] = new T[other.dm2];
+
+						space_d2 = 0;
+					}
+				}
+				else{
+					for(Index i = 0; i < other.dm1; ++i)
+						data[i] = new T[other.dm2];
+				}
+
+				for(Index i = 0; i < other.dm1; ++i)
+					for(Index j = 0; j < other.dm2; ++j)
+						data[i][j] = other.data[i][j];
+
 				dm1 = other.dm1;
 				dm2 = other.dm2;
 				sz = other.sz;
-
-				for(Index i = 0; i < dm1; ++i)
-					for(Index j = 0; j < dm2; ++j)
-						data[i][j] = other.data[i][j];
-
-				space_d1 -= dm1;
-				space_d2 -= dm2;
 				return *this;
 			}
 			else{
@@ -165,11 +162,14 @@ public:
 						delete[] data[i];
 				}
 
+				space_d1 = 0;
+				space_d2 = 0;
+
 				delete[] data;
 			}
 		}
 
-		cout << "Выделение памяти при помощи new в операторе копирующего присваивания" << endl;
+		cout << "Выделение памяти при помощи new в операторе присваивания" << endl;
 
 		dm1 = other.dm1;
 		dm2 = other.dm2;
@@ -694,8 +694,11 @@ public:
 	iterator begin() { return iterator(data, dm2); }
 	iterator end() { return iterator(data + dm1, dm2); }
 
-	const_iterator cbegin() { return const_iterator(data, dm2); }
-	const_iterator cend() { return const_iterator(data + dm1, dm2); }
+	const_iterator begin() const { return this->cbegin(); }
+	const_iterator end() const { return this->cend(); }
+
+	const_iterator cbegin() const { return const_iterator(data, dm2); }
+	const_iterator cend() const { return const_iterator(data + dm1, dm2); }
 
 	~Matrix()
 	{
