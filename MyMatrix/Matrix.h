@@ -1,22 +1,18 @@
 #pragma once
 
 #include<iostream>
-#include<algorithm>
+#include<stdexcept>
 #include<string>
-#include<initializer_list>
 
 using Index = long;
 
 using namespace std;
 
-struct Matrix_error {
+struct Matrix_error : std::runtime_error{
 	string name;
-	Matrix_error(const char* q) : name(q) {}
-	Matrix_error(string s) :name(s) {}
-	string what() { return name; }
+	Matrix_error(const char* q) : std::runtime_error(q){}
+	Matrix_error(string s) : std::runtime_error(s){}
 };
-
-inline void error(const char* p) { throw Matrix_error(p); }
 
 template<typename T>
 T Clamp(T& x, const T& lo, const T& hi)
@@ -32,62 +28,205 @@ template<typename T>
 class Matrix
 {
 private:
-	T * * data;
-	Index dm1;
-	Index dm2;
-	Index sz;
-	Index space_d1;
-	Index space_d2;
+	T * * data{nullptr};
+	Index dm1{0};
+	Index dm2{0};
+	Index sz{0};
+	Index space_d1{0};
+	Index space_d2{0};
+
+	void range_check(Index i, Index j)
+	{
+		if (i < 0 || i >= dm1)
+			throw Matrix_error("range error: dimension 1");
+		if (j < 0 || j >= dm2)
+			throw Matrix_error("range error: dimension 2");
+	}
+
+	void range_check(Index x, Index min, Index max)
+	{
+		if (x < min || x > max)
+			throw Matrix_error("range error");
+	}
 
 public:
-	Matrix() noexcept : data(nullptr), dm1(0), dm2(0), sz(0), space_d1(0), space_d2(0) {}
-	Matrix(const Index x, const Index y) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
+	explicit Matrix(Index x = 0, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
 	{
-		if (dm1 <= 0 || dm2 <= 0)
-			error("Invalid argument for Matrix<T>::Matrix(const Index, const Index)");
+		if (dm1 < 0 || dm2 < 0)
+			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(Index, Index)");
+
+		if(dm1 == 0) return;
+
+		//cout << "Выделение памяти при помощи new в конструкторе" << endl;
 
 		data = new T*[dm1];
 
-		for (Index i = 0; i < dm1; i++)
-			data[i] = new T[dm2]();
+		if(dm2 == 0) return;
 
+		for (Index i = 0; i < dm1; ++i)
+			data[i] = new T[dm2]();
 	}
-	Matrix(const Index x, const Index y, const T& val) : Matrix(x, y)
+	explicit Matrix(const Index x, const Index y, const T& val) : Matrix(x, y)
 	{
 		for (Index i = 0; i < dm1; i++)
 			for (Index j = 0; j < dm2; j++)
 				data[i][j] = val;
 	}
-	Matrix(const Matrix& other) : dm1(other.dm1), dm2(other.dm2), sz(other.sz), space_d1(other.space_d1), space_d2(other.space_d2)
+
+	template<class Container>
+	explicit Matrix(const Index x, const Index y, const Container& cont)
 	{
+		if(std::size(cont) != x*y)
+			throw Matrix_error("size of Container is not equal to size of Matrix");
+
+		Matrix(x, y);
+
+		auto first = std::begin(cont);
+
+		for(Index i = 0; i < dm1; ++i)
+		{
+			for(Index j = 0; j < dm2; ++j)
+			{
+				data[i][j] = *first;
+				++first;
+			}
+		}
+	}
+
+	Matrix(const Matrix& other) : dm1(other.dm1), dm2(other.dm2), sz(other.sz)
+	{
+		//cout << "Выделение памяти при помощи new в конструкторе копирования" << endl;
+
+		data = new T*[dm1];
+
+		for (Index i = 0; i < dm1; ++i)
+			data[i] = new T[dm2]();
+
 		for (Index i = 0; i < dm1; ++i)
 			for (Index j = 0; j < dm2; ++j)
 				data[i][j] = other.data[i][j];
-	}
-	Matrix(Matrix&& other) : Matrix()
-	{
-		swap(data, other.data);
-		swap(dm1, other.dm1);
-		swap(dm2, other.dm2);
-		swap(sz, other.sz);
-		swap(space_d1, other.space_d1);
-		swap(space_d2, other.space_d2);
+
+		return;
 	}
 
-	Matrix& operator=(const Matrix&) = default;
-	Matrix& operator =(Matrix&&) = default;
+	Matrix& operator=(const Matrix& other)
+	{
+		if(this == &other)
+			return *this;
+
+		if(other.dm1 == 0)
+		{
+			this->dm2 = other.dm2;
+			return *this;
+		}
+
+		if(dm1 != 0)
+		{
+			if(space_d1 >= other.dm1)
+			{
+				space_d1 -= other.dm1;
+
+				if(dm2 != 0)
+				{
+					if(space_d2 >= other.dm2){
+						space_d2 -= other.dm2;
+					}
+					else{
+						for(Index i = 0; i < dm1; ++i)
+							delete[] data[i];
+
+						for(Index i = 0; i < other.dm1; ++i)
+							data[i] = new T[other.dm2];
+
+						space_d2 = other.dm2;
+					}
+				}
+				else{
+					for(Index i = 0; i < other.dm1; ++i)
+						data[i] = new T[other.dm2];
+				}
+
+				for(Index i = 0; i < other.dm1; ++i)
+					for(Index j = 0; j < other.dm2; ++j)
+						data[i][j] = other.data[i][j];
+
+				dm1 = other.dm1;
+				dm2 = other.dm2;
+				sz = other.sz;
+				return *this;
+			}
+			else{
+
+				if(dm2 != 0){
+					for(Index i = 0; i < dm1; ++i)
+						delete[] data[i];
+				}
+
+				delete[] data;
+			}
+		}
+
+		//cout << "Выделение памяти при помощи new в операторе присваивания" << endl;
+
+		dm1 = other.dm1;
+		dm2 = other.dm2;
+		sz = other.sz;
+		space_d1 = dm1;
+		space_d2 = dm2;
+
+		data = new T*[dm1];
+
+		for (Index i = 0; i < dm1; ++i)
+			data[i] = new T[dm2]();
+
+		for (Index i = 0; i < dm1; ++i)
+			for (Index j = 0; j < dm2; ++j)
+				data[i][j] = other.data[i][j];
+
+		return *this;
+	}
+
+	Matrix(Matrix&& other)
+	{
+		std::swap(data, other.data);
+		std::swap(dm1, other.dm1);
+		std::swap(dm2, other.dm2);
+		std::swap(sz, other.sz);
+		std::swap(space_d1, other.space_d1);
+		std::swap(space_d2, other.space_d2);
+	}
+
+	Matrix& operator =(Matrix&& other)
+	{
+		if(dm1 != 0)
+		{
+			if(dm2 != 0)
+				for(Index i = 0; i < dm1; ++i)
+					delete[] data[i];
+
+			delete[] data;
+		}
+
+		data = other.data;
+		dm1 = other.dm1;
+		dm2 = other.dm2;
+		sz = other.sz;
+		space_d1 = other.space_d1;
+		space_d2 = other.space_d2;
+
+		other.data = nullptr;
+		other.dm1 = 0;
+		other.dm2 = 0;
+		other.sz = 0;
+		other.space_d1 = 0;
+		other.space_d2 = 0;
+
+		return *this;
+	}
 
 	Index size_dim1() const noexcept { return dm1; }
 	Index size_dim2() const noexcept { return dm2; }
 	Index size() const noexcept { return sz; }
-
-	void range_check(Index i, Index j)
-	{
-		if (i < 0 || i >= dm1)
-			error("range error: dimension 1");
-		if (j < 0 || j >= dm2)
-			error("range error: dimension 2");
-	}
 
 	T const& operator ()(const Index i, const Index j) const
 	{
@@ -100,48 +239,44 @@ public:
 		return data[i][j];
 	}
 
-	T const* operator [](Index i) const { return data[i]; }
-	T* operator [](Index i) { return data[i]; }
+	T const* operator [](Index i) const noexcept { return data[i]; }
+	T* operator [](Index i) noexcept { return data[i]; }
 
 	// rows [n:dm1)
 	Matrix slice(Index n)
 	{
-		Clamp(n, (Index)0, dm1 - 1);
+		Clamp(n, static_cast<Index>(0), dm1 - 1);
 
 		const Index newsz = dm1 - n;
 		Matrix M(newsz, dm2);
+
 		for (Index i = 0, k = n; i < newsz; ++i, ++k)
-		{
 			for (Index j = 0; j < dm2; ++j)
-			{
 				M[i][j] = this->data[k][j];
-			}
-		}
+
 		return M;
 	}
 	// rows [n:dm1)
 	const Matrix slice(Index n) const
 	{
-		Clamp(n, (Index)0, dm1 - 1);
+		Clamp(n, static_cast<Index>(0), dm1 - 1);
 
 		const Index newsz = dm1 - n;
 		Matrix M(newsz, dm2);
+
 		for (Index i = 0, k = n; i < newsz; ++i, ++k)
-		{
 			for (Index j = 0; j < dm2; ++j)
-			{
 				M[i][j] = this->data[k][j];
-			}
-		}
+
 		return M;
 	}
 	//	rows [n:m)
 	Matrix slice(Index n, Index m)
 	{
-		Clamp(n, (Index)0, dm1 - 1);
-		Clamp(m, (Index)0, dm1 - 1);
+		Clamp(n, static_cast<Index>(0), dm1 - 1);
+		Clamp(m, static_cast<Index>(0), dm1 - 1);
 
-		if (m <= n) error("wrong slice");
+		if (m <= n) throw Matrix_error("wrong slice");
 
 		const Index newsz = m - n + 1;
 		Matrix M(newsz, dm2);
@@ -155,10 +290,10 @@ public:
 	//	rows [n:m)
 	const Matrix slice(Index n, Index m) const
 	{
-		Clamp(n, (Index)0, dm1 - 1);
-		Clamp(m, (Index)0, dm1 - 1);
+		Clamp(n, static_cast<Index>(0), dm1 - 1);
+		Clamp(m, static_cast<Index>(0), dm1 - 1);
 
-		if (m <= n) error("wrong slice");
+		if (m <= n) throw Matrix_error("wrong slice");
 
 		const Index newsz = m - n + 1;
 		Matrix M(newsz, dm2);
@@ -172,12 +307,12 @@ public:
 	// rows and colls [n1:m1) and [n2:m2)
 	Matrix slice(Index n1, Index n2, Index m1, Index m2)
 	{
-		Clamp(n1, (Index)0, dm1 - 1);
-		Clamp(m1, (Index)0, dm1 - 1);
-		Clamp(n2, (Index)0, dm2 - 1);
-		Clamp(m2, (Index)0, dm2 - 1);
+		Clamp(n1, static_cast<Index>(0), dm1 - 1);
+		Clamp(m1, static_cast<Index>(0), dm1 - 1);
+		Clamp(n2, static_cast<Index>(0), dm2 - 1);
+		Clamp(m2, static_cast<Index>(0), dm2 - 1);
 
-		if (m1 <= n1 || m2 <= n2) error("wrong slice");
+		if (m1 <= n1 || m2 <= n2) throw Matrix_error("wrong slice");
 
 		const Index newsz_1 = m1 - n1 + 1;
 		const Index newsz_2 = m2 - n2 + 1;
@@ -192,12 +327,12 @@ public:
 	// rows and colls [n1:m1) and [n2:m2)
 	const Matrix slice(Index n1, Index n2, Index m1, Index m2) const
 	{
-		Clamp(n1, (Index)0, dm1 - 1);
-		Clamp(m1, (Index)0, dm1 - 1);
-		Clamp(n2, (Index)0, dm2 - 1);
-		Clamp(m2, (Index)0, dm2 - 1);
+		Clamp(n1, static_cast<Index>(0), dm1 - 1);
+		Clamp(m1, static_cast<Index>(0), dm1 - 1);
+		Clamp(n2, static_cast<Index>(0), dm2 - 1);
+		Clamp(m2, static_cast<Index>(0), dm2 - 1);
 
-		if (m1 <= n1 || m2 <= n2) error("wrong slice");
+		if (m1 <= n1 || m2 <= n2) throw Matrix_error("wrong slice");
 
 		const Index newsz_1 = m1 - n1 + 1;
 		const Index newsz_2 = m2 - n2 + 1;
@@ -212,9 +347,59 @@ public:
 
 	void fill(const T& val)
 	{
-		for (Index i = 0; i < dm1; i++)
-			for (Index j = 0; j < dm2; j++)
+		for (Index i = 0; i < dm1; ++i)
+			for (Index j = 0; j < dm2; ++j)
 				data[i][j] = val;
+	}
+
+	void fill_row(Index i, const T& val)
+	{
+		range_check(i, 0, dm1 - 1);
+
+		for (Index j = 0; j < dm2; ++j)
+			data[i][j] = val;
+	}
+
+	template<class Container>
+	void fill_row(Index i, const Container& cont)
+	{
+		range_check(i, 0, dm1 - 1);
+
+		if(std::size(cont) != dm2)
+			throw Matrix_error("size of Container is not equal to size of this row");
+
+		auto first = std::begin(cont);
+
+		for(Index j = 0; j < dm2; ++j)
+		{
+			data[i][j] = *first;
+			first++;
+		}
+	}
+
+	void fill_col(Index j, const T& val)
+	{
+		range_check(j, 0, dm2 - 1);
+
+		for (Index i = 0; i < dm1; ++i)
+			data[i][j] = val;
+	}
+
+	template<class Container>
+	void fill_col(Index j, const Container& cont)
+	{
+		range_check(j, 0, dm2 - 1);
+
+		if(std::size(cont) != dm1)
+			throw Matrix_error("size of Container is not equal to size of this col");
+
+		auto first = std::begin(cont);
+
+		for(Index i = 0; i < dm1; ++i)
+		{
+			data[i][j] = *first;
+			first++;
+		}
 	}
 
 	template<typename F, typename... Args>
@@ -223,6 +408,24 @@ public:
 		for (Index i = 0; i < dm1; i++)
 			for (Index j = 0; j < dm2; j++)
 				data[i][j] = func(data[i][j], std::forward<Args>(args)...);
+	}
+
+	template<typename F, typename... Args>
+	void apply_to_row(Index i, F func, Args&&... args)
+	{
+		range_check(i, 0, dm1 - 1);
+
+		for (Index j = 0; j < dm2; ++j)
+			data[i][j] = func(data[i][j], std::forward<Args>(args)...);
+	}
+
+	template<typename F, typename... Args>
+	void apply_to_col(Index j, F func, Args&&... args)
+	{
+		range_check(j, 0, dm2 - 1);
+
+		for (Index i = 0; i < dm1; ++i)
+			data[i][j] = func(data[i][j], std::forward<Args>(args)...);
 	}
 
 	void reserve_d1(Index newalloc)
@@ -250,61 +453,54 @@ public:
 		dm1 = newsize;
 		sz = dm1 * dm2;
 	}
-	void add_d1(const T& val)
+
+	void add_d1()
 	{
 		if (space_d1 == 0)
 			reserve_d1(8);
 		else if (dm1 == space_d1)
 			reserve_d1(2 * space_d1);
 
-		data[dm1] = new T[space_d2];
-
-		for (Index i = 0; i < dm2; i++)
-			data[dm1][i] = val;
+		data[dm1] = new T[space_d2]();
 
 		++dm1;
 		sz = dm1 * dm2;
 	}
-	template<typename Iter>
-	void add_d1(Iter first, Iter last)
+
+	bool add_d1(const T& val)
 	{
-		if (std::distance(first, last) != dm2)
-			return;
+		if(dm2 == 0)
+			return false;
 
-		if (space_d1 == 0)
-			reserve_d1(8);
-		else if (dm1 == space_d1)
-			reserve_d1(2 * space_d1);
+		Index old_dm1 = dm1;
 
-		data[dm1] = new T[space_d2];
+		add_d1();
+
+		for (Index i = 0; i < dm2; i++)
+			data[old_dm1][i] = val;
+
+		return true;
+	}
+
+	template<class Container>
+	bool add_d1(const Container& cont)
+	{
+		if(dm2 == 0 || std::size(cont) != dm2)
+			return false;
+
+		auto first 	= std::begin(cont);
+
+		Index old_dm1 = dm1;
+
+		add_d1();
 
 		for (Index i = 0; i < dm2; i++)
 		{
-			data[dm1][i] = *first;
+			data[old_dm1][i] = *first;
 			first++;
 		}
 
-		++dm1;
-		sz = dm1 * dm2;
-	}
-	template<int n>
-	void add_d1(const T(&arr)[n])
-	{
-		if (n != dm2)
-			error("size of array is not equal to size of dimension1");
-
-		if (space_d1 == 0)
-			reserve_d1(8);
-		else if (dm1 == space_d1)
-			reserve_d1(2 * space_d1);
-
-		data[dm1] = new T[space_d2];
-
-		for (Index i = 0; i < n; ++i)
-			data[dm1][i] = arr[i];
-
-		++dm1;
-		sz = dm1 * dm2;
+		return true;
 	}
 
 	void reserve_d2(Index newalloc)
@@ -339,7 +535,8 @@ public:
 		dm2 = newsize;
 		sz = dm1 * dm2;
 	}
-	void add_d2(const T& val)
+
+	void add_d2()
 	{
 		if (space_d2 == 0)
 			reserve_d2(8);
@@ -347,54 +544,53 @@ public:
 			reserve_d2(2 * space_d2);
 
 		for (Index i = 0; i < dm1; i++)
-			data[i][dm2] = val;
+			data[i][dm2] = {};
 
 		++dm2;
 		sz = dm1 * dm2;
 	}
-	template<typename Iter>
-	void add_d2(Iter first, Iter last)
-	{
-		if (std::distance(first, last) != dm1)
-			return;
 
-		if (space_d2 == 0)
-			reserve_d2(8);
-		else if (dm2 == space_d2)
-			reserve_d2(2 * space_d2);
+	bool add_d2(const T& val)
+	{
+		if(dm1 == 0)
+			return false;
+
+		Index old_dm2 = dm2;
+
+		add_d2();
+
+		for (Index i = 0; i < dm1; i++)
+			data[i][old_dm2] = val;
+
+		return true;
+	}
+
+	template<class Container>
+	bool add_d2(const Container& cont)
+	{
+		if(dm1 == 0 || std::size(cont) != dm1)
+			return false;
+
+		auto first = std::begin(cont);
+
+		Index old_dm2 = dm2;
+
+		add_d2();
 
 		for (Index i = 0; i < dm1; ++i)
 		{
-			data[i][dm2] = *first;
+			data[i][old_dm2] = *first;
 			first++;
 		}
 
-		++dm2;
-		sz = dm1 * dm2;
-	}
-	template<int n>
-	void add_d2(const T(&arr)[n])
-	{
-		if (n != dm1)
-			error("size of array is not equal to size of dimension2");
-
-		if (space_d2 == 0)
-			reserve_d2(8);
-		else if (dm2 == space_d2)
-			reserve_d2(2 * space_d2);
-
-		for (Index i = 0; i < n; ++i)
-			data[i][dm2] = arr[i];
-
-		++dm2;
-		sz = dm1 * dm2;
+		return true;
 	}
 
 	void del_d1() { del_d1(dm1 - 1); }
 	void del_d1(Index num)
 	{
 		if (num < 0 || num >= dm1)
-			error("Index is outside of Matrix");
+			throw Matrix_error("Index is outside of Matrix");
 
 		delete data[num];
 
@@ -410,7 +606,7 @@ public:
 	void del_d2(Index num)
 	{
 		if (num < 0 || num >= dm2)
-			error("Index is outside of Matrix");
+			throw Matrix_error("Index is outside of Matrix");
 
 		--dm2;
 
@@ -532,16 +728,22 @@ public:
 	iterator begin() { return iterator(data, dm2); }
 	iterator end() { return iterator(data + dm1, dm2); }
 
-	const_iterator cbegin() { return const_iterator(data, dm2); }
-	const_iterator cend() { return const_iterator(data + dm1, dm2); }
+	const_iterator begin() const { return this->cbegin(); }
+	const_iterator end() const { return this->cend(); }
+
+	const_iterator cbegin() const { return const_iterator(data, dm2); }
+	const_iterator cend() const { return const_iterator(data + dm1, dm2); }
 
 	~Matrix()
 	{
-		if (data == nullptr)
+		//cout << "Удаление" << endl;
+
+		if (dm1 == 0)
 			return;
 
-		for (Index i = 0; i < dm1; i++)
-			delete[] data[i];
+		if(dm2 != 0)
+			for (Index i = 0; i < dm1; i++)
+					delete[] data[i];
 
 		delete[] data;
 	}
