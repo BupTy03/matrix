@@ -28,12 +28,12 @@ template<typename T>
 class Matrix
 {
 private:
-	T * * data;
-	Index dm1;
-	Index dm2;
-	Index sz;
-	Index space_d1;
-	Index space_d2;
+	T * * data{nullptr};
+	Index dm1{0};
+	Index dm2{0};
+	Index sz{0};
+	Index space_d1{0};
+	Index space_d2{0};
 
 	void range_check(Index i, Index j)
 	{
@@ -55,10 +55,9 @@ public:
 		if (dm1 < 0 || dm2 < 0)
 			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(Index, Index)");
 
-		if(dm1 == 0){
-			data = nullptr;
-			return;
-		}
+		if(dm1 == 0) return;
+
+		cout << "Выделение памяти при помощи new в конструкторе" << endl;
 
 		data = new T*[dm1];
 
@@ -66,7 +65,6 @@ public:
 
 		for (Index i = 0; i < dm1; ++i)
 			data[i] = new T[dm2]();
-
 	}
 	explicit Matrix(const Index x, const Index y, const T& val) : Matrix(x, y)
 	{
@@ -76,10 +74,12 @@ public:
 	}
 
 	template<class Container>
-	explicit Matrix(const Index x, const Index y, const Container& cont) :  Matrix(x, y)
+	explicit Matrix(const Index x, const Index y, const Container& cont)
 	{
-		if(std::size(cont) != sz)
+		if(std::size(cont) != x*y)
 			throw Matrix_error("size of Container is not equal to size of Matrix");
+
+		Matrix(x, y);
 
 		auto first = std::begin(cont);
 
@@ -88,34 +88,107 @@ public:
 			for(Index j = 0; j < dm2; ++j)
 			{
 				data[i][j] = *first;
-				first++;
+				++first;
 			}
 		}
 	}
 
-	Matrix(const Matrix& other) : dm1(other.dm1), dm2(other.dm2), sz(other.sz), space_d1(other.space_d1), space_d2(other.space_d2)
+	Matrix(const Matrix& other)
 	{
-		data = new T*[space_d1];
+		if(dm1 != 0)
+		{
+			if(space_d1 >= other.dm1 && space_d2 >= other.dm2)
+			{
+				dm1 = other.dm1;
+				dm2 = other.dm2;
+				sz = other.sz;
+
+				for(Index i = 0; i < dm1; ++i)
+					for(Index j = 0; j < dm2; ++j)
+						data[i][j] = other.data[i][j];
+
+				space_d1 -= dm1;
+				space_d2 -= dm2;
+				return;
+			}
+			else{
+
+				if(dm2 != 0){
+					for(Index i = 0; i < dm1; ++i)
+						delete[] data[i];
+				}
+
+				delete[] data;
+			}
+		}
+
+		cout << "Выделение памяти при помощи new в конструкторе копирования" << endl;
+
+		dm1 = other.dm1;
+		dm2 = other.dm2;
+		sz = other.sz;
+
+		data = new T*[dm1];
 
 		for (Index i = 0; i < dm1; ++i)
-			data[i] = new T[space_d2]();
+			data[i] = new T[dm2]();
 
 		for (Index i = 0; i < dm1; ++i)
 			for (Index j = 0; j < dm2; ++j)
 				data[i][j] = other.data[i][j];
-	}
-	Matrix(Matrix&& other) noexcept : data(nullptr), dm1(0), dm2(0), sz(0), space_d1(0), space_d2(0)
-	{
-		swap(data, other.data);
-		swap(dm1, other.dm1);
-		swap(dm2, other.dm2);
-		swap(sz, other.sz);
-		swap(space_d1, other.space_d1);
-		swap(space_d2, other.space_d2);
+
+		return;
 	}
 
-	Matrix& operator=(const Matrix&) = default;
-	Matrix& operator =(Matrix&&) noexcept = default;
+	Matrix& operator=(const Matrix& other)
+	{
+		if(dm1 != 0)
+		{
+			if(space_d1 >= dm1 && space_d2 >= dm2)
+			{
+				dm1 = other.dm1;
+				dm2 = other.dm2;
+				sz = other.sz;
+
+				for(Index i = 0; i < dm1; ++i)
+					for(Index j = 0; j < dm2; ++j)
+						data[i][j] = other.data[i][j];
+
+				space_d1 -= dm1;
+				space_d2 -= dm2;
+				return *this;
+			}
+			else{
+
+				if(dm2 != 0){
+					for(Index i = 0; i < dm1; ++i)
+						delete[] data[i];
+				}
+
+				delete[] data;
+			}
+		}
+
+		cout << "Выделение памяти при помощи new в операторе копирующего присваивания" << endl;
+
+		dm1 = other.dm1;
+		dm2 = other.dm2;
+		sz = other.sz;
+
+		data = new T*[dm1];
+
+		for (Index i = 0; i < dm1; ++i)
+			data[i] = new T[dm2]();
+
+		for (Index i = 0; i < dm1; ++i)
+			for (Index j = 0; j < dm2; ++j)
+				data[i][j] = other.data[i][j];
+
+		return *this;
+	}
+
+	Matrix(Matrix&&) = default;
+	Matrix& operator =(Matrix&&) = default;
 
 	Index size_dim1() const noexcept { return dm1; }
 	Index size_dim2() const noexcept { return dm2; }
@@ -626,11 +699,14 @@ public:
 
 	~Matrix()
 	{
-		if (data == nullptr)
+		cout << "Удаление" << endl;
+
+		if (dm1 == 0)
 			return;
 
-		for (Index i = 0; i < dm1; i++)
-			delete[] data[i];
+		if(dm2 != 0)
+			for (Index i = 0; i < dm1; i++)
+				delete[] data[i];
 
 		delete[] data;
 	}

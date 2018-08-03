@@ -43,41 +43,55 @@ int main()
 	// mtx.add_d1(6);
 	// cout << mtx << endl;
 
-	int arr[3] = { 1, 2, 3 };
+/////////////////////////////////////////////////////
 
-	Matrix<int> mtx(2, 3);
+	// int arr[3] = { 1, 2, 3 };
 
-	cout << mtx << endl;
+	// Matrix<int> mtx(2, 3);
 
-	cout << std::boolalpha;
+	// cout << mtx << endl;
 
-	cout << mtx.add_d1(arr) << endl;
+	// cout << std::boolalpha;
 
-	cout << mtx << endl;
+	// cout << mtx.add_d1(arr) << endl;
 
-	cout << mtx.add_d2(arr) << endl;
+	// cout << mtx << endl;
 
-	cout << mtx << endl;
+	// cout << mtx.add_d2(arr) << endl;
 
-	std::vector<int> v(mtx.size_dim2(), 1);
+	// cout << mtx << endl;
 
-	cout << mtx.add_d1(v) << endl;
+	// std::vector<int> v(mtx.size_dim2(), 1);
 
-	cout << mtx << endl;
+	// cout << mtx.add_d1(v) << endl;
 
-	int arr2[6] = { 1, 2, 3, 4, 5, 6 };
+	// cout << mtx << endl;
 
-	Matrix<int> mtx2{2, 3, arr2};
+	// int arr2[6] = { 1, 2, 3, 4, 5, 6 };
+
+	// Matrix<int> mtx2{2, 3, arr2};
+
+	// cout << mtx2 << endl;
+
+	// mtx2.apply_to_row(1, [](auto& x){ return x*x; });
+
+	// cout << mtx2 << endl;
+
+	// mtx2.fill_row(0, 0);
+
+	// cout << mtx2 << endl;
+
+	/////////////////////////////////////////////////
+
+	Matrix<int> mtx(6, 6);
+
+	//cout << mtx << endl;
+
+	//Matrix<int> mtx2(10, 10);
+	Matrix<int> mtx2 = mtx;
 
 	cout << mtx2 << endl;
 
-	mtx2.apply_to_row(1, [](auto& x){ return x*x; });
-
-	cout << mtx2 << endl;
-
-	mtx2.fill_row(0, 0);
-
-	cout << mtx2 << endl;
 
 	return 0;
 }
