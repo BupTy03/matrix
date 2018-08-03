@@ -198,6 +198,9 @@ public:
 
 	Matrix& operator =(Matrix&& other)
 	{
+		if(this == &other)
+			return *this;
+		
 		if(dm1 != 0)
 		{
 			if(dm2 != 0)
