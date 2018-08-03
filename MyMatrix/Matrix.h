@@ -138,7 +138,7 @@ public:
 						for(Index i = 0; i < other.dm1; ++i)
 							data[i] = new T[other.dm2];
 
-						space_d2 = 0;
+						space_d2 = other.dm2;
 					}
 				}
 				else{
@@ -162,9 +162,6 @@ public:
 						delete[] data[i];
 				}
 
-				space_d1 = 0;
-				space_d2 = 0;
-
 				delete[] data;
 			}
 		}
@@ -174,6 +171,8 @@ public:
 		dm1 = other.dm1;
 		dm2 = other.dm2;
 		sz = other.sz;
+		space_d1 = dm1;
+		space_d2 = dm2;
 
 		data = new T*[dm1];
 
@@ -187,8 +186,43 @@ public:
 		return *this;
 	}
 
-	Matrix(Matrix&&) = default;
-	Matrix& operator =(Matrix&&) = default;
+	Matrix(Matrix&& other)
+	{
+		std::swap(data, other.data);
+		std::swap(dm1, other.dm1);
+		std::swap(dm2, other.dm2);
+		std::swap(sz, other.sz);
+		std::swap(space_d1, other.space_d1);
+		std::swap(space_d2, other.space_d2);
+	}
+
+	Matrix& operator =(Matrix&& other)
+	{
+		if(dm1 != 0)
+		{
+			if(dm2 != 0)
+				for(Index i = 0; i < dm1; ++i)
+					delete[] data[i];
+
+			delete[] data;
+		}
+
+		data = other.data;
+		dm1 = other.dm1;
+		dm2 = other.dm2;
+		sz = other.sz;
+		space_d1 = other.space_d1;
+		space_d2 = other.space_d2;
+
+		other.data = nullptr;
+		other.dm1 = 0;
+		other.dm2 = 0;
+		other.sz = 0;
+		other.space_d1 = 0;
+		other.space_d2 = 0;
+
+		return *this;
+	}
 
 	Index size_dim1() const noexcept { return dm1; }
 	Index size_dim2() const noexcept { return dm2; }
@@ -709,7 +743,7 @@ public:
 
 		if(dm2 != 0)
 			for (Index i = 0; i < dm1; i++)
-				delete[] data[i];
+					delete[] data[i];
 
 		delete[] data;
 	}

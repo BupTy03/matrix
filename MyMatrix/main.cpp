@@ -90,10 +90,11 @@ int main()
 	//Matrix<int> mtx2(10, 10);
 	Matrix<int> mtx2(0, 7);
 
-	mtx2 = mtx;
+	mtx2 = std::move(mtx);
 
 	cout << mtx2 << endl;
 
+	cout << mtx << endl;
 
 	return 0;
 }
