@@ -57,7 +57,7 @@ public:
 
 		if(dm1 == 0) return;
 
-		cout << "Выделение памяти при помощи new в конструкторе" << endl;
+		//cout << "Выделение памяти при помощи new в конструкторе" << endl;
 
 		data = new T*[dm1];
 
@@ -95,7 +95,7 @@ public:
 
 	Matrix(const Matrix& other) : dm1(other.dm1), dm2(other.dm2), sz(other.sz)
 	{
-		cout << "Выделение памяти при помощи new в конструкторе копирования" << endl;
+		//cout << "Выделение памяти при помощи new в конструкторе копирования" << endl;
 
 		data = new T*[dm1];
 
@@ -166,7 +166,7 @@ public:
 			}
 		}
 
-		cout << "Выделение памяти при помощи new в операторе присваивания" << endl;
+		//cout << "Выделение памяти при помощи new в операторе присваивания" << endl;
 
 		dm1 = other.dm1;
 		dm2 = other.dm2;
@@ -736,7 +736,7 @@ public:
 
 	~Matrix()
 	{
-		cout << "Удаление" << endl;
+		//cout << "Удаление" << endl;
 
 		if (dm1 == 0)
 			return;
