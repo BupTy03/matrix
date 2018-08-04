@@ -35,7 +35,7 @@ private:
 	Index space_d1{0};
 	Index space_d2{0};
 
-	void range_check(Index i, Index j)
+	inline void range_check(Index i, Index j)
 	{
 		if (i < 0 || i >= dm1)
 			throw Matrix_error("range error: dimension 1");
@@ -43,7 +43,7 @@ private:
 			throw Matrix_error("range error: dimension 2");
 	}
 
-	void range_check(Index x, Index min, Index max)
+	inline void range_check(Index x, Index min, Index max)
 	{
 		if (x < min || x > max)
 			throw Matrix_error("range error");
@@ -227,23 +227,23 @@ public:
 		return *this;
 	}
 
-	Index size_dim1() const noexcept { return dm1; }
-	Index size_dim2() const noexcept { return dm2; }
-	Index size() const noexcept { return sz; }
+	inline Index size_dim1() const noexcept { return dm1; }
+	inline Index size_dim2() const noexcept { return dm2; }
+	inline Index size() const noexcept { return sz; }
 
-	T const& operator ()(const Index i, const Index j) const
+	inline T const& operator ()(const Index i, const Index j) const
 	{
 		range_check(i, j);
 		return data[i][j];
 	}
-	T& operator ()(Index i, Index j)
+	inline T& operator ()(Index i, Index j)
 	{
 		range_check(i, j);
 		return data[i][j];
 	}
 
-	T const* operator [](Index i) const noexcept { return data[i]; }
-	T* operator [](Index i) noexcept { return data[i]; }
+	inline T const* operator [](Index i) const noexcept { return data[i]; }
+	inline T* operator [](Index i) noexcept { return data[i]; }
 
 	// rows [n:dm1)
 	Matrix slice(Index n)
@@ -728,14 +728,14 @@ public:
 	using iterator = MatrixIterator;
 	using const_iterator = ConstMatrixIterator;
 
-	iterator begin() { return iterator(data, dm2); }
-	iterator end() { return iterator(data + dm1, dm2); }
+	inline iterator begin() noexcept { return iterator(data, dm2); }
+	inline iterator end() noexcept { return iterator(data + dm1, dm2); }
 
-	const_iterator begin() const { return this->cbegin(); }
-	const_iterator end() const { return this->cend(); }
+	inline const_iterator begin() const noexcept { return this->cbegin(); }
+	inline const_iterator end() const noexcept { return this->cend(); }
 
-	const_iterator cbegin() const { return const_iterator(data, dm2); }
-	const_iterator cend() const { return const_iterator(data + dm1, dm2); }
+	inline const_iterator cbegin() const noexcept { return const_iterator(data, dm2); }
+	inline const_iterator cend() const noexcept { return const_iterator(data + dm1, dm2); }
 
 	~Matrix()
 	{
