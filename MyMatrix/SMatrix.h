@@ -70,7 +70,15 @@ public:
 			for (Index j = 0; j < d2; ++j)
 				this->elem[i][j] = other.elem[i][j];
 	}
-	constexpr SMatrix& operator =(const SMatrix&) = default;
+	constexpr SMatrix& operator =(const SMatrix& other)
+	{
+		if(this == &other)
+			return *this;
+
+		for (Index i = 0; i < d1; ++i)
+			for (Index j = 0; j < d2; ++j)
+				this->elem[i][j] = other.elem[i][j];
+	}
 
 	SMatrix(SMatrix&&) = delete;
 	SMatrix& operator =(SMatrix&&) = delete;
@@ -82,20 +90,20 @@ public:
 	inline T* data() noexcept { return (T*)elem; }
 	inline T const* data() const noexcept { return (T const*)elem; }
 
-	constexpr T const& operator ()(const Index i, const Index j) const
+	constexpr inline T const& operator ()(const Index i, const Index j) const
 	{
 		range_check(i, j);
 		return elem[i][j];
 	}
-	T& operator ()(const Index i, const Index j)
+	inline T& operator ()(const Index i, const Index j)
 	{
 		range_check(i, j);
 		return elem[i][j];
 	}
 
 
-	constexpr T const* operator [](Index i) const { return elem[i]; }
-	T* operator [](Index i) { return elem[i]; }
+	constexpr inline T const* operator [](Index i) const { return elem[i]; }
+	inline T* operator [](Index i) { return elem[i]; }
 
 	void fill(const T& val)
 	{
@@ -140,6 +148,9 @@ public:
 
 	inline iterator begin() noexcept { return (T*)elem; }
 	inline iterator end() noexcept { return (T*)elem + sz; }
+
+	inline const_iterator begin() const noexcept { return this->cbegin(); }
+	inline const_iterator end() const noexcept { return this->cend(); }
 
 	inline const_iterator cbegin() const noexcept { return (T const*)elem; }
 	inline const_iterator cend() const noexcept { return (T const*)elem + sz; }
