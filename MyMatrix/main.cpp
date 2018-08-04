@@ -1,6 +1,11 @@
 #include<iostream>
+<<<<<<< HEAD
+#include <vector>
+#include"SMatrix.h"
+=======
 //#include <vector>
 //#include"SMatrix.h"
+>>>>>>> c9bc94db8929066f3471f06158494f6e570577da
 #include"Matrix.h"
 
 using namespace std;
@@ -26,7 +31,7 @@ int main()
 	// try{
 	// 	cout << matrix(1000, 1000) << endl;	// throws range error
 	// }
-	// catch(runtime_error e){
+	// catch(const exception& e){
 	// 	cout << e.what() << endl;
 	// }
 
@@ -45,56 +50,57 @@ int main()
 
 /////////////////////////////////////////////////////
 
-	// int arr[3] = { 1, 2, 3 };
+	int arr[3] = { 1, 2, 3 };
 
-	// Matrix<int> mtx(2, 3);
+	Matrix<int> mtx(2, 3);
 
-	// cout << mtx << endl;
+	cout << mtx << endl;
 
-	// cout << std::boolalpha;
+	cout << std::boolalpha;
 
-	// cout << mtx.add_d1(arr) << endl;
+	cout << mtx.add_d1(arr) << endl;
 
-	// cout << mtx << endl;
+	cout << mtx << endl;
 
-	// cout << mtx.add_d2(arr) << endl;
+	cout << mtx.add_d2(arr) << endl;
 
-	// cout << mtx << endl;
+	cout << mtx << endl;
 
-	// std::vector<int> v(mtx.size_dim2(), 1);
+	std::vector<int> v(mtx.size_dim2(), 1);
 
-	// cout << mtx.add_d1(v) << endl;
+	cout << mtx.add_d1(v) << endl;
 
-	// cout << mtx << endl;
+	cout << mtx << endl;
 
-	// int arr2[6] = { 1, 2, 3, 4, 5, 6 };
+	int arr2[6] = { 1, 2, 3, 4, 5, 6 };
 
-	// Matrix<int> mtx2{2, 3, arr2};
+	Matrix<int> mtx2{2, 3, arr2};
 
-	// cout << mtx2 << endl;
-
-	// mtx2.apply_to_row(1, [](auto& x){ return x*x; });
-
-	// cout << mtx2 << endl;
-
-	// mtx2.fill_row(0, 0);
-
-	// cout << mtx2 << endl;
-
-	/////////////////////////////////////////////////
-
-	Matrix<int> mtx(6, 6);
-
-	//cout << mtx << endl;
-
-	//Matrix<int> mtx2(10, 10);
-	Matrix<int> mtx2(0, 7);
-
-	mtx2 = std::move(mtx);
+	cout << "mtx2.size_dim1() = " << mtx2.size_dim1() << endl;
+	cout << "mtx2.size_dim2() = " << mtx2.size_dim2() << endl;
 
 	cout << mtx2 << endl;
 
-	cout << mtx << endl;
+	mtx2.apply_to_row(1, [](auto& x){ return x*x; });
+
+	cout << mtx2 << endl;
+
+	mtx2.fill_row(0, 0);
+
+	cout << mtx2 << endl;
+
+	/////////////////////////////////////////////////
+
+	// Matrix<int> mtx(6, 6);
+
+	// //cout << mtx << endl;
+
+	// //Matrix<int> mtx2(10, 10);
+	// Matrix<int> mtx2(std::move(mtx));
+
+	// cout << mtx2 << endl;
+
+	// cout << mtx << endl;
 
 	return 0;
 }
