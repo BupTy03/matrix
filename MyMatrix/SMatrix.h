@@ -10,8 +10,8 @@ using Index = long;
 using namespace std;
 
 struct SMatrix_error : std::runtime_error{
-	SMatrix_error(const char* q) : std::runtime_error(q){}
-	SMatrix_error(string n) : std::runtime_error(n){}
+	explicit SMatrix_error(const char* q) : std::runtime_error(q){}
+	explicit SMatrix_error(string n) : std::runtime_error(n){}
 };
 
 template<typename T, const Index d1, const Index d2>
