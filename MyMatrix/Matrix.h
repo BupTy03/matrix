@@ -9,9 +9,8 @@ using Index = long;
 using namespace std;
 
 struct Matrix_error : std::runtime_error{
-	string name;
-	Matrix_error(const char* q) : std::runtime_error(q){}
-	Matrix_error(string s) : std::runtime_error(s){}
+	explicit Matrix_error(const char* q) : std::runtime_error(q){}
+	explicit Matrix_error(string s) : std::runtime_error(s){}
 };
 
 template<typename T>
