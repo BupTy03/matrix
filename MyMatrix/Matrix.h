@@ -667,14 +667,9 @@ public:
 		} 
 		MatrixIterator& operator++(int) noexcept
 		{
-			if (left >= step)
-			{
-				left = 0;
-				++p;
-				return *this;
-			}
-			left++;
-			return *this;
+			auto _tmp = *this;
+			this->operator++();
+			return _tmp;
 		}
 	private:
 		T * * p;
@@ -707,14 +702,9 @@ public:
 		}
 		inline ConstMatrixIterator& operator++(int) noexcept
 		{
-			if (left >= step)
-			{
-				left = 0;
-				++p;
-				return *this;
-			}
-			left++;
-			return *this;
+			auto _tmp = *this;
+			this->operator++();
+			return _tmp;
 		}
 	private:
 		const T** p;
