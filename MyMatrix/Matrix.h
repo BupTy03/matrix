@@ -651,10 +651,11 @@ public:
 		MatrixIterator(const MatrixIterator &it) noexcept : p(it.p), step(it.step), left(it.left) {}
 		MatrixIterator& operator =(const MatrixIterator&) = default;
 
-		bool operator!=(MatrixIterator const& other) const noexcept { return p != other.p || left != other.left || step != other.step; }
-		bool operator==(MatrixIterator const& other) const noexcept { return p == other.p && left == other.left && step == other.step; }
-		T& operator*() const noexcept { return *(*p + left); }
-		MatrixIterator& operator++() noexcept
+		inline bool operator!=(MatrixIterator const& other) const noexcept { return p != other.p || left != other.left || step != other.step; }
+		inline bool operator==(MatrixIterator const& other) const noexcept { return p == other.p && left == other.left && step == other.step; }
+		inline T& operator*() const noexcept { return *(*p + left); }
+		inline T* operator->() noexcept { return (*p + left); }
+		inline MatrixIterator& operator++() noexcept
 		{
 			if (left >= step)
 			{
@@ -665,7 +666,7 @@ public:
 			left++;
 			return *this;
 		} 
-		MatrixIterator& operator++(int) noexcept
+		inline MatrixIterator& operator++(int) noexcept
 		{
 			auto _tmp = *this;
 			this->operator++();
@@ -689,6 +690,7 @@ public:
 		inline bool operator!=(ConstMatrixIterator const& other) const noexcept { return p != other.p || left != other.left || step != other.step; }
 		inline bool operator==(ConstMatrixIterator const& other) const noexcept { return p == other.p && left == other.left && step == other.step; }
 		inline T const& operator*() const noexcept { return *(*p + left); }
+		inline const T* operator->() const noexcept { return (*p + left); }
 		inline ConstMatrixIterator& operator++() noexcept
 		{
 			if (left >= step)
