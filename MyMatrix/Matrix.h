@@ -1,4 +1,5 @@
 #pragma once
+#ifndef MATRIX_HPP
 
 #include<iostream>
 #include<stdexcept>
@@ -8,33 +9,48 @@ using Index = long;
 
 using namespace std;
 
-struct Matrix_error : std::runtime_error{
-	explicit Matrix_error(const char* q) : std::runtime_error(q){}
-	explicit Matrix_error(string s) : std::runtime_error(s){}
+struct Matrix_error : std::runtime_error {
+	explicit Matrix_error(const char* q) : std::runtime_error(q) {}
+	explicit Matrix_error(string s) : std::runtime_error(s) {}
 };
 
-template<typename T>
-T Clamp(T& x, const T& lo, const T& hi)
-{
-	T result = x;
-	if (x < lo) result = lo;
-	else if (x > hi) result = hi;
-	return x = result;
-}
+namespace MyLib {
 
+	template<typename T>
+	T Clamp(T& x, const T& lo, const T& hi)
+	{
+		T result = x;
+		if (x < lo) result = lo;
+		else if (x > hi) result = hi;
+		return x = result;
+	}
+
+	template<typename Container>
+	constexpr size_t size(const Container& cont)
+	{
+		return cont.size();
+	}
+
+	template<typename T, size_t Size>
+	constexpr size_t size(const T(&)[Size])
+	{
+		return Size;
+	}
+
+}
 
 template<typename T>
 class Matrix
 {
 private:
-	T * * data{nullptr};
-	Index dm1{0};
-	Index dm2{0};
-	Index sz{0};
-	Index space_d1{0};
-	Index space_d2{0};
+	T * * data{ nullptr };
+	Index dm1{ 0 };
+	Index dm2{ 0 };
+	Index sz{ 0 };
+	Index space_d1{ 0 };
+	Index space_d2{ 0 };
 
-	inline void range_check(Index i, Index j)
+	inline void range_check(const Index i, const Index j)
 	{
 		if (i < 0 || i >= dm1)
 			throw Matrix_error("range error: dimension 1");
@@ -42,25 +58,27 @@ private:
 			throw Matrix_error("range error: dimension 2");
 	}
 
-	inline void range_check(Index x, Index min, Index max)
+	inline void range_check(const Index x, const Index min, const Index max)
 	{
 		if (x < min || x > max)
 			throw Matrix_error("range error");
 	}
 
 public:
-	explicit Matrix(Index x = 0, Index y = 0) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
+	explicit Matrix() { Matrix(0, 0); }
+
+	explicit Matrix(Index x, Index y) : dm1(x), dm2(y), sz(dm1 * dm2), space_d1(dm1), space_d2(dm2)
 	{
 		if (dm1 < 0 || dm2 < 0)
 			throw Matrix_error("Invalid argument for Matrix<T>::Matrix(Index, Index)");
 
-		if(dm1 == 0) return;
+		if (dm1 == 0) return;
 
 		//cout << "Выделение памяти при помощи new в конструкторе" << endl;
 
 		data = new T*[dm1];
 
-		if(dm2 == 0) return;
+		if (dm2 == 0) return;
 
 		for (Index i = 0; i < dm1; ++i)
 			data[i] = new T[dm2]();
@@ -75,14 +93,14 @@ public:
 	template<class Container>
 	explicit Matrix(const Index x, const Index y, const Container& cont) : Matrix(x, y)
 	{
-		if(std::size(cont) != x*y)
+		if (MyLib::size(cont) != x * y)
 			throw Matrix_error("size of Container is not equal to size of Matrix");
 
 		auto first = std::begin(cont);
 
-		for(Index i = 0; i < dm1; ++i)
+		for (Index i = 0; i < dm1; ++i)
 		{
-			for(Index j = 0; j < dm2; ++j)
+			for (Index j = 0; j < dm2; ++j)
 			{
 				data[i][j] = *first;
 				++first;
@@ -108,43 +126,43 @@ public:
 
 	Matrix& operator=(const Matrix& other)
 	{
-		if(this == &other)
+		if (this == &other)
 			return *this;
 
-		if(other.dm1 == 0)
+		if (other.dm1 == 0)
 		{
 			this->dm2 = other.dm2;
 			return *this;
 		}
 
-		if(dm1 != 0)
+		if (dm1 != 0)
 		{
-			if(space_d1 >= other.dm1)
+			if (space_d1 >= other.dm1)
 			{
 				space_d1 -= other.dm1;
 
-				if(dm2 != 0)
+				if (dm2 != 0)
 				{
-					if(space_d2 >= other.dm2){
+					if (space_d2 >= other.dm2) {
 						space_d2 -= other.dm2;
 					}
-					else{
-						for(Index i = 0; i < dm1; ++i)
+					else {
+						for (Index i = 0; i < dm1; ++i)
 							delete[] data[i];
 
-						for(Index i = 0; i < other.dm1; ++i)
+						for (Index i = 0; i < other.dm1; ++i)
 							data[i] = new T[other.dm2];
 
 						space_d2 = other.dm2;
 					}
 				}
-				else{
-					for(Index i = 0; i < other.dm1; ++i)
+				else {
+					for (Index i = 0; i < other.dm1; ++i)
 						data[i] = new T[other.dm2];
 				}
 
-				for(Index i = 0; i < other.dm1; ++i)
-					for(Index j = 0; j < other.dm2; ++j)
+				for (Index i = 0; i < other.dm1; ++i)
+					for (Index j = 0; j < other.dm2; ++j)
 						data[i][j] = other.data[i][j];
 
 				dm1 = other.dm1;
@@ -152,11 +170,14 @@ public:
 				sz = other.sz;
 				return *this;
 			}
-			else{
-
-				if(dm2 != 0){
-					for(Index i = 0; i < dm1; ++i)
+			else 
+			{
+				if (dm2 != 0) 
+				{
+					for (Index i = 0; i < dm1; ++i) 
+					{
 						delete[] data[i];
+					}
 				}
 
 				delete[] data;
@@ -195,13 +216,13 @@ public:
 
 	Matrix& operator =(Matrix&& other)
 	{
-		if(this == &other)
+		if (this == &other)
 			return *this;
-		
-		if(dm1 != 0)
+
+		if (dm1 != 0)
 		{
-			if(dm2 != 0)
-				for(Index i = 0; i < dm1; ++i)
+			if (dm2 != 0)
+				for (Index i = 0; i < dm1; ++i)
 					delete[] data[i];
 
 			delete[] data;
@@ -243,23 +264,9 @@ public:
 	inline T* operator [](Index i) noexcept { return data[i]; }
 
 	// rows [n:dm1)
-	Matrix slice(Index n)
+	Matrix slice(Index n) const
 	{
-		Clamp(n, static_cast<Index>(0), dm1 - 1);
-
-		const Index newsz = dm1 - n;
-		Matrix M(newsz, dm2);
-
-		for (Index i = 0, k = n; i < newsz; ++i, ++k)
-			for (Index j = 0; j < dm2; ++j)
-				M[i][j] = this->data[k][j];
-
-		return M;
-	}
-	// rows [n:dm1)
-	const Matrix slice(Index n) const
-	{
-		Clamp(n, static_cast<Index>(0), dm1 - 1);
+		MyLib::Clamp(n, static_cast<Index>(0), dm1 - 1);
 
 		const Index newsz = dm1 - n;
 		Matrix M(newsz, dm2);
@@ -271,27 +278,10 @@ public:
 		return M;
 	}
 	//	rows [n:m)
-	Matrix slice(Index n, Index m)
+	Matrix slice(Index n, Index m) const
 	{
-		Clamp(n, static_cast<Index>(0), dm1 - 1);
-		Clamp(m, static_cast<Index>(0), dm1 - 1);
-
-		if (m <= n) throw Matrix_error("wrong slice");
-
-		const Index newsz = m - n + 1;
-		Matrix M(newsz, dm2);
-
-		for (Index i = 0, k = n; i < newsz; ++i, ++k)
-			for (Index j = 0; j < dm2; ++j)
-				M[i][j] = this->data[k][j];
-
-		return M;
-	}
-	//	rows [n:m)
-	const Matrix slice(Index n, Index m) const
-	{
-		Clamp(n, static_cast<Index>(0), dm1 - 1);
-		Clamp(m, static_cast<Index>(0), dm1 - 1);
+		MyLib::Clamp(n, static_cast<Index>(0), dm1 - 1);
+		MyLib::Clamp(m, static_cast<Index>(0), dm1 - 1);
 
 		if (m <= n) throw Matrix_error("wrong slice");
 
@@ -305,32 +295,12 @@ public:
 		return M;
 	}
 	// rows and colls [n1:m1) and [n2:m2)
-	Matrix slice(Index n1, Index n2, Index m1, Index m2)
+	Matrix slice(Index n1, Index n2, Index m1, Index m2) const
 	{
-		Clamp(n1, static_cast<Index>(0), dm1 - 1);
-		Clamp(m1, static_cast<Index>(0), dm1 - 1);
-		Clamp(n2, static_cast<Index>(0), dm2 - 1);
-		Clamp(m2, static_cast<Index>(0), dm2 - 1);
-
-		if (m1 <= n1 || m2 <= n2) throw Matrix_error("wrong slice");
-
-		const Index newsz_1 = m1 - n1 + 1;
-		const Index newsz_2 = m2 - n2 + 1;
-		Matrix M(newsz_1, newsz_2);
-
-		for (Index i = 0, a = n1; i < newsz_1; ++i, ++a)
-			for (Index j = 0, b = n2; j < newsz_2; ++j, ++b)
-				M[i][j] = this->data[a][b];
-
-		return M;
-	}
-	// rows and colls [n1:m1) and [n2:m2)
-	const Matrix slice(Index n1, Index n2, Index m1, Index m2) const
-	{
-		Clamp(n1, static_cast<Index>(0), dm1 - 1);
-		Clamp(m1, static_cast<Index>(0), dm1 - 1);
-		Clamp(n2, static_cast<Index>(0), dm2 - 1);
-		Clamp(m2, static_cast<Index>(0), dm2 - 1);
+		MyLib::Clamp(n1, static_cast<Index>(0), dm1 - 1);
+		MyLib::Clamp(m1, static_cast<Index>(0), dm1 - 1);
+		MyLib::Clamp(n2, static_cast<Index>(0), dm2 - 1);
+		MyLib::Clamp(m2, static_cast<Index>(0), dm2 - 1);
 
 		if (m1 <= n1 || m2 <= n2) throw Matrix_error("wrong slice");
 
@@ -365,12 +335,12 @@ public:
 	{
 		range_check(i, 0, dm1 - 1);
 
-		if(std::size(cont) != dm2)
+		if (MyLib::size(cont) != dm2)
 			throw Matrix_error("size of Container is not equal to size of this row");
 
 		auto first = std::begin(cont);
 
-		for(Index j = 0; j < dm2; ++j)
+		for (Index j = 0; j < dm2; ++j)
 		{
 			data[i][j] = *first;
 			first++;
@@ -390,12 +360,12 @@ public:
 	{
 		range_check(j, 0, dm2 - 1);
 
-		if(std::size(cont) != dm1)
+		if (MyLib::size(cont) != dm1)
 			throw Matrix_error("size of Container is not equal to size of this col");
 
 		auto first = std::begin(cont);
 
-		for(Index i = 0; i < dm1; ++i)
+		for (Index i = 0; i < dm1; ++i)
 		{
 			data[i][j] = *first;
 			first++;
@@ -469,7 +439,7 @@ public:
 
 	bool add_d1(const T& val)
 	{
-		if(dm2 == 0)
+		if (dm2 == 0)
 			return false;
 
 		Index old_dm1 = dm1;
@@ -485,10 +455,10 @@ public:
 	template<class Container>
 	bool add_d1(const Container& cont)
 	{
-		if(dm2 == 0 || std::size(cont) != dm2)
+		if (dm2 == 0 || MyLib::size(cont) != dm2)
 			return false;
 
-		auto first 	= std::begin(cont);
+		auto first = std::begin(cont);
 
 		Index old_dm1 = dm1;
 
@@ -552,7 +522,7 @@ public:
 
 	bool add_d2(const T& val)
 	{
-		if(dm1 == 0)
+		if (dm1 == 0)
 			return false;
 
 		Index old_dm2 = dm2;
@@ -568,7 +538,7 @@ public:
 	template<class Container>
 	bool add_d2(const Container& cont)
 	{
-		if(dm1 == 0 || std::size(cont) != dm1)
+		if (dm1 == 0 || MyLib::size(cont) != dm1)
 			return false;
 
 		auto first = std::begin(cont);
@@ -665,7 +635,7 @@ public:
 			}
 			left++;
 			return *this;
-		} 
+		}
 		inline MatrixIterator& operator++(int) noexcept
 		{
 			auto _tmp = *this;
@@ -690,7 +660,7 @@ public:
 		inline bool operator!=(ConstMatrixIterator const& other) const noexcept { return p != other.p || left != other.left || step != other.step; }
 		inline bool operator==(ConstMatrixIterator const& other) const noexcept { return p == other.p && left == other.left && step == other.step; }
 		inline T const& operator*() const noexcept { return *(*p + left); }
-		inline const T* operator->() const noexcept { return (*p + left); }
+		inline const T* operator->() noexcept { return (*p + left); }
 		inline ConstMatrixIterator& operator++() noexcept
 		{
 			if (left >= step)
@@ -733,10 +703,14 @@ public:
 		if (dm1 == 0)
 			return;
 
-		if(dm2 != 0)
+		if (dm2 != 0)
 			for (Index i = 0; i < dm1; i++)
+				if (data[i] != nullptr)
 					delete[] data[i];
 
-		delete[] data;
+		if (data != nullptr)
+			delete[] data;
 	}
 };
+
+#endif // MATRIX_HPP
